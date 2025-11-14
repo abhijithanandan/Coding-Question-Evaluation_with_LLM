@@ -1,0 +1,17 @@
+{
+    "files.exclude": {
+        "**/.pytest": true,
+        "**/.pytest_cache": true,
+        "**/__pycache__": true
+    },
+    "search.exclude": {
+        "**/.pytest": true,
+        "**/.pytest_cache": true,
+        "**/__pycache__": true
+    },
+    "files.watcherExclude": {
+        "**/.pytest": true,
+        "**/.pytest_cache": true,
+        "**/__pycache__": true
+    }
+}

@@ -1,0 +1,25 @@
+[project]
+name = "llm-agnostic-eval-coding"
+version = "0.1.0"
+description = "Generic LLM-based coding question evaluator (HPC course)"
+authors = [ {name = "AutoGen"} ]
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.dependencies]
+openai = "*"
+anthropic = "*"
+google-genai = "*"
+requests = "*"
+pydantic = ">=2.0"
+pandas = "*"
+tqdm = "*"
+python-dotenv = "*"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
