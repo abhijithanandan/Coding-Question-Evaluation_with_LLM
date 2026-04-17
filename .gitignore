@@ -1,6 +1,9 @@
 # Ignore data directory containing question specs, templates and submissions
 /data/
 
+# Results
+results_*
+
 # Environment files
 .env
 .env.*

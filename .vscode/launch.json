@@ -2,18 +2,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Debug evaluate_coding.py (dry-run)",
+            "name": "Evaluate Q17 (OpenAI gpt-5.4, dry-run)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/evaluate_coding.py",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
-                "29",
+                "17",
                 "--provider",
                 "openai",
                 "--model",
-                "gpt-5-2025-08-07",
+                "gpt-5.4",
                 "--dry-run"
             ],
             "envFile": "${workspaceFolder}/.env",
@@ -23,20 +23,62 @@
             "justMyCode": true
         },
         {
-            "name": "Python: Debug evaluate_coding.py (single-file)",
+            "name": "Evaluate Q17 (OpenAI gpt-5.4-mini, dry-run)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/evaluate_coding.py",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
-                "29",
+                "17",
                 "--provider",
                 "openai",
                 "--model",
-                "gpt-5-2025-08-07",
+                "gpt-5.4-mini",
+                "--dry-run"
+            ],
+            "envFile": "${workspaceFolder}/.env",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Evaluate Q17 (Gemini, dry-run)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/evaluate_coding.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "17",
+                "--provider",
+                "google",
+                "--model",
+                "gemini-2.5-flash",
+                "--dry-run"
+            ],
+            "envFile": "${workspaceFolder}/.env",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src:${env:PYTHONPATH}"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Evaluate single-file (OpenAI gpt-5.4)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/evaluate_coding.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "17",
+                "--provider",
+                "openai",
+                "--model",
+                "gpt-5.4-mini",
                 "--single-file",
-                "${workspaceFolder}/data/Submissions_29/cb.ai.u4aid23036.cu"
+                "${workspaceFolder}/data/Submissions_17/cb.ai.u4aid24002.py"
             ],
             "envFile": "${workspaceFolder}/.env",
             "env": {

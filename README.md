@@ -1,12 +1,14 @@
 # Generic Coding Evaluation (LLM-Agnostic)
 
-This repository provides a provider-agnostic evaluator for coding questions (HPC course). It keeps original scripts untouched and adds a flexible adapter layer so you can choose among OpenAI, Anthropic, Google Gemini, HuggingFace Inference API, or any local OpenAI-compatible endpoint (for example, vLLM or a local llama.cpp server exposing an OpenAI-compatible endpoint).
+This repository provides a course-agnostic, provider-agnostic evaluator for coding questions. It uses LLMs to read student code submissions and award partial marks based on the question specification and template-defined rubric. You can choose among OpenAI, Anthropic, Google Gemini, HuggingFace Inference API, or any local OpenAI-compatible endpoint.
 
 ## Features
 
 - Unified `LLMClient` abstraction with pluggable providers.
 - Structured JSON parsing with fallback extraction.
 - Dry-run mode that prints a representative payload without calling the API.
+- Per-question `max_score` defined in `question_map.json`; mark allocations derived from template TODO comments.
+- Auto-discovers student roll numbers from submission filenames (no hardcoding needed).
 - Reuses the existing question spec/template directory layout under `data/`.
 
 ## Project layout
@@ -17,7 +19,7 @@ This repository provides a provider-agnostic evaluator for coding questions (HPC
   - `utils/` - prompt builders and parse helpers
   - `clients.py` - facade exporting `LLMClient` and `ProviderConfig`
   - `tests/` - unit tests
-- `data/` - question specs, starter templates and `submissions_*` directories
+- `data/` - question specs, starter templates, `question_map.json`, and `Submissions_*` directories
 
 ## Installation
 
@@ -29,7 +31,7 @@ pip install -e .
 
 ## Environment variables
 
-Set the relevant keys for the provider you plan to use:
+Copy `.env.example` to `.env` and set the relevant keys for the provider you plan to use:
 
 | Provider    | Required variable(s)                | Notes / optional                            |
 | ----------- | ----------------------------------- | ------------------------------------------- |
@@ -39,24 +41,37 @@ Set the relevant keys for the provider you plan to use:
 | huggingface | `HF_API_KEY`                        |                                             |
 | local       | `LOCAL_LLM_BASE_URL` (OpenAI-style) | `LOCAL_LLM_API_KEY` if your server needs it |
 
+## Preparing data for a new course
+
+1. Create `Question_<N>.md` files with the problem specification.
+2. Create `Template_<N>.py` (or other extension) with starter code including `# TODO` comments and mark allocations (e.g., `(3 Marks)`).
+3. Place student submissions in `Submissions_<N>/` directories, named by roll number (e.g., `student001.py`).
+4. Edit `data/question_map.json` to register each question with its spec, template, submissions directory, file extension, technology hint, and `max_score`.
+
 ## Usage
 
-Run the CLI evaluator for a specific question number (15, 24, 29):
+Run the CLI evaluator for a question number defined in `question_map.json`:
 
 ```bash
-# Example: run question 15 with Google Gemini (dry-run)
-python -m evaluate_coding 15 --provider google --model gemini-2.5-flash --dry-run
+# Dry-run to preview the prompt (no API call)
+python -m evaluate_coding 17 --provider google --model gemini-2.5-flash --dry-run
 
-# Other examples:
-python -m evaluate_coding 24 --provider openai --model gpt-5-2025-08-07
-python -m evaluate_coding 29 --provider anthropic --model claude-sonnet-4-5-20250929
+# Run evaluation with OpenAI
+python -m evaluate_coding 17 --provider openai --model gpt-5.4
+python -m evaluate_coding 18 --provider openai --model gpt-5.4-mini
+
+# Run evaluation with Google Gemini
+python -m evaluate_coding 17 --provider google --model gemini-2.5-flash
+
+# Run evaluation with Anthropic
+python -m evaluate_coding 18 --provider anthropic --model claude-sonnet-4-5-20250929
 ```
 
 If you're running a local OpenAI-compatible server (vLLM, etc.):
 
 ```bash
 export LOCAL_LLM_BASE_URL="http://localhost:8000/v1"
-python -m evaluate_coding 15 --provider local --model your-model-name
+python -m evaluate_coding 17 --provider local --model your-model-name
 ```
 
 ## Output

@@ -13,7 +13,7 @@ from clients import LLMClient, ProviderConfig
 
 logger = logging.getLogger(__name__)
 from utils.helpers import (
-    generate_student_roll_numbers,
+    discover_roll_numbers,
     get_coding_system_prompt,
 )
 
@@ -37,7 +37,9 @@ QUESTION_MAP = {int(k): v for k, v in _raw_map.items()}
 def main():
     parser = argparse.ArgumentParser(description="Generic LLM coding evaluator")
     parser.add_argument(
-        "question_number", type=int, help="Question number (e.g., 15, 24, 29)"
+        "question_number",
+        type=int,
+        help="Question number as defined in question_map.json",
     )
     parser.add_argument(
         "--provider",
@@ -49,7 +51,12 @@ def main():
     parser.add_argument(
         "--model", type=str, default="gemini-2.5-flash", help="Model name"
     )
-    parser.add_argument("--max-score", type=float, default=10.0)
+    parser.add_argument(
+        "--max-score",
+        type=float,
+        default=None,
+        help="Max score (overrides question_map value; defaults to question_map or 10)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print payload and exit")
     parser.add_argument(
         "--single-file", type=str, default=None, help="Path to a single submission file"
@@ -80,6 +87,9 @@ def main():
     submissions_dir = cfgq["submissions_dir"]
     file_ext = cfgq["ext"].lower()
     tech_hint = cfgq["tech_hint"]
+    max_score = (
+        args.max_score if args.max_score is not None else cfgq.get("max_score", 10.0)
+    )
     output_csv = args.out or f"results_coding_question_{qnum}_generic.csv"
 
     # Resolve spec/template/submissions under DATA_DIR when relative
@@ -106,7 +116,7 @@ def main():
         template_text = f.read()
 
     system_prompt = get_coding_system_prompt(
-        question_text, template_text, args.max_score, tech_hint
+        question_text, template_text, max_score, tech_hint
     )
 
     provider_cfg = ProviderConfig(
@@ -118,25 +128,31 @@ def main():
         # with SDK parse helpers (structured outputs / text_format).
         json_schema=CodingEvaluation,
     )
-    try:
-        client = LLMClient.from_env(provider_cfg)
-    except Exception as e:
-        logger.error("Error initializing provider '%s': %s", args.provider, e)
-        return
+
+    client = None
+    if not args.dry_run:
+        try:
+            client = LLMClient.from_env(provider_cfg)
+        except Exception as e:
+            logger.error("Error initializing provider '%s': %s", args.provider, e)
+            return
 
     # If the client discovered a requests-per-minute limit, print an advisory
-    rpm = getattr(client, "_rpm", 0)
-    if rpm:
-        est_lat = float(os.getenv("LLM_ESTIMATED_LATENCY_SEC", "30"))
-        recommended_workers = max(1, int((rpm / 60.0) * est_lat))
-        logger.info(
-            "Provider RPM limit detected: %s RPM. Estimated latency: %ss.", rpm, est_lat
-        )
-        logger.info(
-            "Recommended workers to approach full utilization: %s. You set --workers=%s.",
-            recommended_workers,
-            args.workers,
-        )
+    if client:
+        rpm = getattr(client, "_rpm", 0)
+        if rpm:
+            est_lat = float(os.getenv("LLM_ESTIMATED_LATENCY_SEC", "30"))
+            recommended_workers = max(1, int((rpm / 60.0) * est_lat))
+            logger.info(
+                "Provider RPM limit detected: %s RPM. Estimated latency: %ss.",
+                rpm,
+                est_lat,
+            )
+            logger.info(
+                "Recommended workers to approach full utilization: %s. You set --workers=%s.",
+                recommended_workers,
+                args.workers,
+            )
 
     results = []
 
@@ -193,7 +209,7 @@ def main():
             }
         )
     else:
-        all_roll_numbers = generate_student_roll_numbers()
+        all_roll_numbers = discover_roll_numbers(submissions_dir, file_ext)
         logger.info(
             "Processing %d students with %d workers...",
             len(all_roll_numbers),
